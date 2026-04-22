@@ -24,6 +24,8 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 # 30 seconds (30000ms) is a common threshold — it's also what Spotify uses
 # internally to count a "stream" for royalty purposes.
 MIN_MS_PLAYED = 30_000
+MAX_MS_PLAYED = 3_600_000  # 60 minutes — anything above is a stuck session
+
 
 # Whether to exclude incognito plays
 EXCLUDE_INCOGNITO = True
@@ -64,18 +66,31 @@ def clean(df: pd.DataFrame) -> pd.DataFrame:
         & df["audiobook_title"].isna()
     )
     df = df[is_music].copy()
-    print(f"  After music-only filter: {len(df):,} (dropped {initial - len(df):,} non-music rows)")
+    print(
+        f"  After music-only filter: {len(df):,} (dropped {initial - len(df):,} non-music rows)"
+    )
 
     # --- Minimum play duration ---
     before = len(df)
     df = df[df["ms_played"] >= MIN_MS_PLAYED].copy()
-    print(f"  After min duration ({MIN_MS_PLAYED/1000:.0f}s): {len(df):,} (dropped {before - len(df):,} short plays)")
+    print(
+        f"  After min duration ({MIN_MS_PLAYED/1000:.0f}s): {len(df):,} (dropped {before - len(df):,} short plays)"
+    )
+
+    # --- Maximum play duration (catches stuck sessions) ---
+    before = len(df)
+    df = df[df["ms_played"] <= MAX_MS_PLAYED].copy()
+    print(
+        f"  After max duration ({MAX_MS_PLAYED/1000/60:.0f}min): {len(df):,} (dropped {before - len(df):,} stuck sessions)"
+    )
 
     # --- Incognito filter ---
     if EXCLUDE_INCOGNITO:
         before = len(df)
         df = df[~df["incognito_mode"]].copy()
-        print(f"  After incognito filter: {len(df):,} (dropped {before - len(df):,} incognito plays)")
+        print(
+            f"  After incognito filter: {len(df):,} (dropped {before - len(df):,} incognito plays)"
+        )
 
     # --- Parse timestamps and extract time features ---
     df["ts"] = pd.to_datetime(df["ts"], utc=True)
@@ -88,23 +103,43 @@ def clean(df: pd.DataFrame) -> pd.DataFrame:
     df["hour"] = df["ts"].dt.hour
 
     # --- Extract track ID from URI (useful for API calls later) ---
-    df["track_id"] = df["spotify_track_uri"].str.replace("spotify:track:", "", regex=False)
+    df["track_id"] = df["spotify_track_uri"].str.replace(
+        "spotify:track:", "", regex=False
+    )
 
     # --- Rename long column names for convenience ---
-    df = df.rename(columns={
-        "master_metadata_track_name": "track_name",
-        "master_metadata_album_artist_name": "artist_name",
-        "master_metadata_album_album_name": "album_name",
-        "conn_country": "country",
-    })
+    df = df.rename(
+        columns={
+            "master_metadata_track_name": "track_name",
+            "master_metadata_album_artist_name": "artist_name",
+            "master_metadata_album_album_name": "album_name",
+            "conn_country": "country",
+        }
+    )
 
     # --- Select columns we actually need ---
     keep_cols = [
-        "ts", "date", "year", "month", "year_month", "week", "day_of_week", "hour",
-        "track_name", "artist_name", "album_name", "track_id",
-        "spotify_track_uri", "country", "platform",
-        "ms_played", "reason_start", "reason_end",
-        "shuffle", "skipped", "offline",
+        "ts",
+        "date",
+        "year",
+        "month",
+        "year_month",
+        "week",
+        "day_of_week",
+        "hour",
+        "track_name",
+        "artist_name",
+        "album_name",
+        "track_id",
+        "spotify_track_uri",
+        "country",
+        "platform",
+        "ms_played",
+        "reason_start",
+        "reason_end",
+        "shuffle",
+        "skipped",
+        "offline",
     ]
     df = df[keep_cols].copy()
 
@@ -123,11 +158,15 @@ def profile(df: pd.DataFrame):
     total_hours = df["ms_played"].sum() / 1000 / 3600
     print(f"  Total streams:      {len(df):,}")
     print(f"  Date range:         {df['date'].min()} → {df['date'].max()}")
-    print(f"  Total listening:    {total_hours:,.0f} hours ({total_hours/24:,.0f} days)")
+    print(
+        f"  Total listening:    {total_hours:,.0f} hours ({total_hours/24:,.0f} days)"
+    )
     print(f"  Unique tracks:      {df['track_id'].nunique():,}")
     print(f"  Unique artists:     {df['artist_name'].nunique():,}")
     print(f"  Unique albums:      {df['album_name'].nunique():,}")
-    print(f"  Countries:          {df['country'].nunique()} — {df['country'].value_counts().head(5).to_dict()}")
+    print(
+        f"  Countries:          {df['country'].nunique()} — {df['country'].value_counts().head(5).to_dict()}"
+    )
 
     print(f"\n  ms_played stats:")
     ms = df["ms_played"]
