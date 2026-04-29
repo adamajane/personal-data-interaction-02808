@@ -1,5 +1,5 @@
 """
-generate_hourly_csvs.py
+04_generate_hourly.py
 =======================
 
 INPUT  : data/raw/Streaming_History_Audio_*.json   (Spotify extended history)
@@ -10,7 +10,7 @@ OUTPUT : data/viz/viz_hourly_intensity.csv
 
 HOW TO RUN
 ----------
-  python generate_hourly_csvs.py
+  python 04_generate_hourly.py
 
 """
 

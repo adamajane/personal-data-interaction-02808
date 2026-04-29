@@ -54,6 +54,7 @@ cp .env.example .env
 python 01_clean_data.py
 python 02_enrich_genres.py
 python 03_build_viz_data.py
+python 04_generate_hourly.py 
 ```
 
 ## Output
