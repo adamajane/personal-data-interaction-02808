@@ -1,12 +1,14 @@
 # A Life in Songs — Data Pipeline
 
 ## Overview
+
 This pipeline transforms raw Spotify streaming history (JSON exports) into clean,
 aggregated datasets ready for visualization in Observable.
 
 ## Pipeline Steps
 
 ### Step 1: `01_clean_data.py`
+
 - Loads all JSON files from `data/raw/`
 - Filters out podcasts, audiobooks, and non-music content
 - Applies minimum play threshold (30 seconds)
@@ -16,6 +18,7 @@ aggregated datasets ready for visualization in Observable.
 - **Outputs:** `data/processed/clean_streams.csv`
 
 ### Step 2: `02_enrich_genres.py`
+
 - Reads the clean dataset
 - Extracts unique track URIs → fetches artist IDs via Spotify API (batch of 50)
 - Fetches artist genres via Spotify API (batch of 50)
@@ -24,6 +27,7 @@ aggregated datasets ready for visualization in Observable.
 - **Requires:** Spotify API credentials in `.env` file
 
 ### Step 3: `03_build_viz_data.py`
+
 - Merges clean streams with artist genres
 - Builds aggregated datasets for each visualization:
   - `viz_genre_streams.csv` — monthly genre proportions (for streamgraph)
@@ -54,9 +58,10 @@ cp .env.example .env
 python 01_clean_data.py
 python 02_enrich_genres.py
 python 03_build_viz_data.py
-python 04_generate_hourly.py 
+python 04_generate_hourly.py
 ```
 
 ## Output
+
 All visualization-ready files end up in `data/viz/` — these are what you load
 into your Observable notebook.
