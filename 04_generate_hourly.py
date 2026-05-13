@@ -120,7 +120,7 @@ def write_hourly_intensity(records, out_dir):
                     int(h in NIGHT_HOURS),
                 ]
             )
-    print(f"  ✓ {path}  ({len(agg):,} rows)")
+    print(f"  Wrote {path}  ({len(agg):,} rows)")
 
 
 # ── OUTPUT 2 — viz_hour_by_year.csv ─────────────────────────────────────────
@@ -151,7 +151,7 @@ def write_hour_by_year(records, out_dir):
                     int(h in NIGHT_HOURS),
                 ]
             )
-    print(f"  ✓ {path}  ({len(agg):,} rows)")
+    print(f"  Wrote {path}  ({len(agg):,} rows)")
 
 
 # ── OUTPUT 3 — viz_night_sessions.csv ───────────────────────────────────────
@@ -203,7 +203,7 @@ def write_night_sessions(records, out_dir):
             w.writerow(
                 [ym, yr, round(nhr, 4), ntr, round(tot, 4), round(share, 4), top_artist]
             )
-    print(f"  ✓ {path}  ({len(monthly_total):,} rows)")
+    print(f"  Wrote {path}  ({len(monthly_total):,} rows)")
 
 
 # ── OUTPUT 4 — viz_weekday_hourly.csv ───────────────────────────────────────
@@ -235,7 +235,7 @@ def write_weekday_hourly(records, out_dir):
                     int(h in NIGHT_HOURS),
                 ]
             )
-    print(f"  ✓ {path}  ({len(agg):,} rows)")
+    print(f"  Wrote {path}  ({len(agg):,} rows)")
 
 
 # ── MAIN ─────────────────────────────────────────────────────────────────────

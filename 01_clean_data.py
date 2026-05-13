@@ -152,7 +152,7 @@ def clean(df: pd.DataFrame) -> pd.DataFrame:
 def profile(df: pd.DataFrame):
     """Print a summary profile of the cleaned dataset."""
     print("\n" + "=" * 60)
-    print("📊 DATASET PROFILE")
+    print("DATASET PROFILE")
     print("=" * 60)
 
     total_hours = df["ms_played"].sum() / 1000 / 3600
@@ -191,7 +191,7 @@ def profile(df: pd.DataFrame):
 
 
 def main():
-    print("🎵 A Life in Songs — Data Cleaning Pipeline\n")
+    print("A Life in Songs — Data Cleaning Pipeline\n")
 
     # Step 1: Load
     print("[1/3] Loading raw JSON files...")
@@ -207,7 +207,7 @@ def main():
 
     out_path = OUT_DIR / "clean_streams.csv"
     df.to_csv(out_path, index=False)
-    print(f"\n✅ Saved clean dataset to {out_path}")
+    print(f"\nSaved clean dataset to {out_path}")
     print(f"   {len(df):,} rows × {len(df.columns)} columns")
 
 

@@ -61,7 +61,9 @@ def merge_genres(streams: pd.DataFrame, genres: pd.DataFrame) -> pd.DataFrame:
     )
 
     known = (streams["primary_genre"] != "unknown").sum()
-    print(f"  Streams with genre info: {known:,}/{len(streams):,} ({known/len(streams)*100:.1f}%)")
+    print(
+        f"  Streams with genre info: {known:,}/{len(streams):,} ({known/len(streams)*100:.1f}%)"
+    )
 
     return streams
 
@@ -69,6 +71,7 @@ def merge_genres(streams: pd.DataFrame, genres: pd.DataFrame) -> pd.DataFrame:
 # ──────────────────────────────────────────────
 # Visualization Dataset Builders
 # ──────────────────────────────────────────────
+
 
 def build_genre_streams(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -79,19 +82,19 @@ def build_genre_streams(df: pd.DataFrame) -> pd.DataFrame:
     proportions of total ms_played.
     """
     # Find the top genres by total listening time across all months
-    genre_time = df.groupby("primary_genre")["ms_played"].sum().sort_values(ascending=False)
+    genre_time = (
+        df.groupby("primary_genre")["ms_played"].sum().sort_values(ascending=False)
+    )
     top_genres = genre_time.head(TOP_N_GENRES).index.tolist()
 
     # Map non-top genres to "Other"
     df = df.copy()
-    df["genre_group"] = df["primary_genre"].apply(lambda g: g if g in top_genres else "Other")
+    df["genre_group"] = df["primary_genre"].apply(
+        lambda g: g if g in top_genres else "Other"
+    )
 
     # Monthly totals per genre group
-    monthly = (
-        df.groupby(["year_month", "genre_group"])["ms_played"]
-        .sum()
-        .reset_index()
-    )
+    monthly = df.groupby(["year_month", "genre_group"])["ms_played"].sum().reset_index()
 
     # Convert to proportions within each month
     month_totals = monthly.groupby("year_month")["ms_played"].transform("sum")
@@ -108,11 +111,7 @@ def build_artist_dominance(df: pd.DataFrame) -> pd.DataFrame:
     Top N artists per month by listening time.
     Returns a long-form table suitable for a bump chart.
     """
-    monthly = (
-        df.groupby(["year_month", "artist_name"])["ms_played"]
-        .sum()
-        .reset_index()
-    )
+    monthly = df.groupby(["year_month", "artist_name"])["ms_played"].sum().reset_index()
 
     results = []
     for ym, group in monthly.groupby("year_month"):
@@ -121,7 +120,9 @@ def build_artist_dominance(df: pd.DataFrame) -> pd.DataFrame:
         top["hours"] = top["ms_played"] / 1000 / 3600
         results.append(top)
 
-    return pd.concat(results)[["year_month", "artist_name", "rank", "ms_played", "hours"]]
+    return pd.concat(results)[
+        ["year_month", "artist_name", "rank", "ms_played", "hours"]
+    ]
 
 
 def build_daily_intensity(df: pd.DataFrame) -> pd.DataFrame:
@@ -227,14 +228,18 @@ def build_discovery_ratio(df: pd.DataFrame) -> pd.DataFrame:
         new_artists = month_artists - seen_artists
         familiar_artists = month_artists & seen_artists
 
-        rows.append({
-            "year_month": ym,
-            "total_artists": len(month_artists),
-            "new_artists": len(new_artists),
-            "familiar_artists": len(familiar_artists),
-            "discovery_ratio": len(new_artists) / len(month_artists) if month_artists else 0,
-            "cumulative_artists": len(seen_artists | month_artists),
-        })
+        rows.append(
+            {
+                "year_month": ym,
+                "total_artists": len(month_artists),
+                "new_artists": len(new_artists),
+                "familiar_artists": len(familiar_artists),
+                "discovery_ratio": (
+                    len(new_artists) / len(month_artists) if month_artists else 0
+                ),
+                "cumulative_artists": len(seen_artists | month_artists),
+            }
+        )
 
         seen_artists |= month_artists
 
@@ -242,7 +247,7 @@ def build_discovery_ratio(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def main():
-    print("📊 A Life in Songs — Building Visualization Datasets\n")
+    print("A Life in Songs — Building Visualization Datasets\n")
 
     # Load
     print("[1/8] Loading data...")
@@ -256,7 +261,9 @@ def main():
     print("\n[3/8] Building genre streamgraph data...")
     genre_streams = build_genre_streams(df)
     genre_streams.to_csv(VIZ_DIR / "viz_genre_streams.csv", index=False)
-    print(f"  → {len(genre_streams)} rows, {genre_streams['genre_group'].nunique()} genre groups")
+    print(
+        f"  → {len(genre_streams)} rows, {genre_streams['genre_group'].nunique()} genre groups"
+    )
 
     print("\n[4/8] Building artist dominance data...")
     artist_dom = build_artist_dominance(df)
@@ -285,12 +292,12 @@ def main():
 
     # Summary
     print("\n" + "=" * 60)
-    print("✅ All visualization datasets saved to data/viz/")
+    print("All visualization datasets saved to data/viz/")
     print("=" * 60)
     for f in sorted(VIZ_DIR.glob("*.csv")):
         size = f.stat().st_size / 1024
         print(f"  {f.name:<35} {size:>8.1f} KB")
-    print("\nReady for Observable! 🚀")
+    print("\nReady for Observable!")
 
 
 if __name__ == "__main__":

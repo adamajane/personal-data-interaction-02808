@@ -56,7 +56,7 @@ def get_spotify_token() -> str:
     )
     resp.raise_for_status()
     token = resp.json()["access_token"]
-    print(f"  ✅ Got Spotify access token")
+    print(f"  Got Spotify access token")
     return token
 
 
@@ -71,7 +71,9 @@ def batch_get_tracks(track_ids: list[str], token: str) -> dict:
     headers = {"Authorization": f"Bearer {token}"}
     artist_map = {}  # artist_name -> artist_id
 
-    batches = [track_ids[i:i + BATCH_SIZE] for i in range(0, len(track_ids), BATCH_SIZE)]
+    batches = [
+        track_ids[i : i + BATCH_SIZE] for i in range(0, len(track_ids), BATCH_SIZE)
+    ]
 
     print(f"  Fetching {len(track_ids)} tracks in {len(batches)} batches...")
     for batch in tqdm(batches, desc="  Tracks"):
@@ -84,7 +86,7 @@ def batch_get_tracks(track_ids: list[str], token: str) -> dict:
         if resp.status_code == 429:
             # Rate limited — wait and retry
             wait = int(resp.headers.get("Retry-After", 5))
-            print(f"\n  ⚠️ Rate limited, waiting {wait}s...")
+            print(f"\nRate limited, waiting {wait}s...")
             time.sleep(wait)
             resp = requests.get(
                 f"https://api.spotify.com/v1/tracks?ids={ids_str}",
@@ -92,7 +94,7 @@ def batch_get_tracks(track_ids: list[str], token: str) -> dict:
             )
 
         if resp.status_code != 200:
-            print(f"\n  ⚠️ Track batch failed (status {resp.status_code}), skipping...")
+            print(f"\nTrack batch failed (status {resp.status_code}), skipping...")
             continue
 
         tracks = resp.json().get("tracks", [])
@@ -115,9 +117,13 @@ def batch_get_artist_genres(artist_ids: list[str], token: str) -> dict:
     headers = {"Authorization": f"Bearer {token}"}
     genre_map = {}  # artist_id -> [genres]
 
-    batches = [artist_ids[i:i + BATCH_SIZE] for i in range(0, len(artist_ids), BATCH_SIZE)]
+    batches = [
+        artist_ids[i : i + BATCH_SIZE] for i in range(0, len(artist_ids), BATCH_SIZE)
+    ]
 
-    print(f"  Fetching genres for {len(artist_ids)} artists in {len(batches)} batches...")
+    print(
+        f"  Fetching genres for {len(artist_ids)} artists in {len(batches)} batches..."
+    )
     for batch in tqdm(batches, desc="  Artists"):
         ids_str = ",".join(batch)
         resp = requests.get(
@@ -127,7 +133,7 @@ def batch_get_artist_genres(artist_ids: list[str], token: str) -> dict:
 
         if resp.status_code == 429:
             wait = int(resp.headers.get("Retry-After", 5))
-            print(f"\n  ⚠️ Rate limited, waiting {wait}s...")
+            print(f"\nRate limited, waiting {wait}s...")
             time.sleep(wait)
             resp = requests.get(
                 f"https://api.spotify.com/v1/artists?ids={ids_str}",
@@ -135,7 +141,7 @@ def batch_get_artist_genres(artist_ids: list[str], token: str) -> dict:
             )
 
         if resp.status_code != 200:
-            print(f"\n  ⚠️ Artist batch failed (status {resp.status_code}), skipping...")
+            print(f"\nArtist batch failed (status {resp.status_code}), skipping...")
             continue
 
         artists = resp.json().get("artists", [])
@@ -152,7 +158,7 @@ def batch_get_artist_genres(artist_ids: list[str], token: str) -> dict:
 # Main Pipeline
 # ──────────────────────────────────────────────
 def main():
-    print("🎸 A Life in Songs — Genre Enrichment\n")
+    print("A Life in Songs — Genre Enrichment\n")
 
     # Load clean data
     print("[1/4] Loading clean streams...")
@@ -177,9 +183,7 @@ def main():
     # Step A: track IDs → artist IDs
     print("\n[4/4] Fetching data from Spotify API...")
     print("\n  --- Phase A: Tracks → Artist IDs ---")
-    artist_id_map = batch_get_tracks(
-        artist_tracks["rep_track_id"].tolist(), token
-    )
+    artist_id_map = batch_get_tracks(artist_tracks["rep_track_id"].tolist(), token)
     print(f"  Got artist IDs for {len(artist_id_map)} artists")
 
     # Step B: artist IDs → genres
@@ -194,27 +198,34 @@ def main():
         name = row["artist_name"]
         artist_id = artist_id_map.get(name)
         genres = genre_map.get(artist_id, []) if artist_id else []
-        rows.append({
-            "artist_name": name,
-            "artist_id": artist_id or "",
-            "genres": "|".join(genres) if genres else "",  # pipe-separated
-            "genre_count": len(genres),
-        })
+        rows.append(
+            {
+                "artist_name": name,
+                "artist_id": artist_id or "",
+                "genres": "|".join(genres) if genres else "",  # pipe-separated
+                "genre_count": len(genres),
+            }
+        )
 
     result = pd.DataFrame(rows)
 
     # Stats
     has_genres = result[result["genre_count"] > 0]
     no_genres = result[result["genre_count"] == 0]
-    print(f"\n📊 Genre Enrichment Results:")
-    print(f"  Artists with genres:    {len(has_genres):,} ({len(has_genres)/len(result)*100:.1f}%)")
-    print(f"  Artists without genres: {len(no_genres):,} ({len(no_genres)/len(result)*100:.1f}%)")
+    print(f"\nGenre Enrichment Results:")
+    print(
+        f"  Artists with genres:    {len(has_genres):,} ({len(has_genres)/len(result)*100:.1f}%)"
+    )
+    print(
+        f"  Artists without genres: {len(no_genres):,} ({len(no_genres)/len(result)*100:.1f}%)"
+    )
 
     # Show top genres
     all_genres = []
     for g in has_genres["genres"]:
         all_genres.extend(g.split("|"))
     from collections import Counter
+
     top_genres = Counter(all_genres).most_common(20)
     print(f"\n  Top 20 genres across all artists:")
     for genre, count in top_genres:
@@ -222,7 +233,7 @@ def main():
 
     # Save
     result.to_csv(OUT_FILE, index=False)
-    print(f"\n✅ Saved artist genres to {OUT_FILE}")
+    print(f"\nSaved artist genres to {OUT_FILE}")
     print(f"   {len(result)} artists")
 
 
