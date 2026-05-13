@@ -37,6 +37,18 @@ aggregated datasets ready for visualization in Observable.
   - `viz_behavior_monthly.csv` — monthly listening behavior patterns (for behavior chart)
 - **Outputs:** `data/viz/` directory
 
+### Step 4: `04_generate_hourly.py`
+
+- Loads raw JSON files directly from `data/raw/` (independent of Steps 1–3)
+- Applies minimum play threshold (30 seconds) and parses UTC timestamps
+- Extracts hour-of-day, weekday, and night-hour (22h–04h) features
+- Builds aggregated datasets for hour-based visualizations:
+  - `viz_hourly_intensity.csv` — listening per (year_month, hour) (for radial clock and heatmap)
+  - `viz_hour_by_year.csv` — listening per (year, hour) (for hour × year chart)
+  - `viz_night_sessions.csv` — monthly night-session totals with top night artist
+  - `viz_weekday_hourly.csv` — hourly listening split by weekday vs weekend (for radial clock comparison)
+- **Outputs:** `data/viz/` directory
+
 ## Setup
 
 ```bash
